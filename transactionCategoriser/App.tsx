@@ -1,20 +1,60 @@
-import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
+import React from 'react';
+import { View, Text, FlatList, StyleSheet } from 'react-native';
 
-export default function App() {
+const transactionsData = [
+  { id: '1', title: 'Transaction 1', amount: 20.0 },
+  { id: '2', title: 'Transaction 1', amount: 20.0 },
+  { id: '3', title: 'Transaction 3', amount: -10.0 },
+];
+
+const App = () => {
   return (
     <View style={styles.container}>
-      <Text>Open up App.tsx to start working on your app!</Text>
-      <StatusBar style="auto" />
+      <Text style={styles.header}>Transaction List</Text>
+      <FlatList
+        data={transactionsData}
+        keyExtractor={(item) => item.id}
+        renderItem={({ item }) => (
+          <>
+            <View style={styles.transactionItem}>
+              <Text>{item.title}</Text>
+
+              <Text>{item.amount}</Text>
+            </View>
+            <View style={styles.dateAndCategory}>
+              <Text style={styles.smallText}>category</Text>
+              <Text style={styles.smallText}>date</Text>
+              <Text />
+            </View>
+          </>
+        )}
+      />
     </View>
   );
-}
+};
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
+    padding: 16,
   },
+  header: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 16,
+  },
+  transactionItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+  smallText: {
+    fontSize: 10,
+  },
+  dateAndCategory: {
+    flexDirection: 'row',
+    justifyContent: 'space-between'
+  }
 });
+
+export default App;
