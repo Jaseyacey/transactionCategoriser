@@ -15,10 +15,18 @@ const App = () => {
         data={transactionsData}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
-          <View style={styles.transactionItem}>
-            <Text>{item.title}</Text>
-            <Text>{item.amount}</Text>
-          </View>
+          <>
+            <View style={styles.transactionItem}>
+              <Text>{item.title}</Text>
+
+              <Text>{item.amount}</Text>
+            </View>
+            <View style={styles.dateAndCategory}>
+              <Text style={styles.smallText}>category</Text>
+              <Text style={styles.smallText}>date</Text>
+              <Text />
+            </View>
+          </>
         )}
       />
     </View>
@@ -40,6 +48,13 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginBottom: 8,
   },
+  smallText: {
+    fontSize: 10,
+  },
+  dateAndCategory: {
+    flexDirection: 'row',
+    justifyContent: 'space-between'
+  }
 });
 
 export default App;
