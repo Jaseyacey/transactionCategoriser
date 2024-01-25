@@ -2,22 +2,20 @@ import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
-  FlatList,
   StyleSheet,
   TouchableOpacity,
+  FlatList,
   ScrollView,
 } from "react-native";
-import { CheckBox } from "react-native-elements";
 import Modal from "react-native-modal";
 import axios from "axios";
 
 interface Transaction {
+  datetime: string;
   id: string;
-  title: string;
+  description: string; // Changed "title" to "description" to match your data
   amount: number;
   category: string;
-  details: string;
-  date: string;
 }
 
 const TransactioncategoryScreen: React.FC = () => {
@@ -26,22 +24,36 @@ const TransactioncategoryScreen: React.FC = () => {
   const [isModalVisible, setModalVisible] = useState(false);
   const [isRightCategory, setIsRightCategory] = useState(false);
   const [isWrongCategory, setIsWrongCategory] = useState(false);
-  const [transactionsData, setTransactionsData] = useState<Transaction[]>([]);
   const [customerUid, setCustomerUid] = useState([''])
+  const [dateTime, setDateTime] = useState('')
 
-  const ipaddress = ""
+  const ipaddress = "192.168.1.242"
   const url = `http://${ipaddress}:8080`;
-
   const getCustomer = `${url}/customers/27aa6570-e343-4f17-bb17-5a7668936b8f/transactions`;
 
+
+  const initialTransactionsData: Transaction[] = []; // Placeholder while fetching data
+
+  const [transactionsData, setTransactionsData] = useState<Transaction[]>(initialTransactionsData);
+  const mapToTransaction = (apiData: any): Transaction => {
+    return {
+      datetime: apiData.datetime,
+      id: apiData.id,
+      description: apiData.description,
+      amount: apiData.amount,
+      category: apiData.category.name, // Assuming "category" is an object with a "name" property
+    };
+  };
   useEffect(() => {
     const fetchData = async () => {
       try {
         const response = await fetch(getCustomer);
         const data = await response.json();
-        console.log(data)
+        const transactions = data.map((item: {}) => mapToTransaction(item));
+        setTransactionsData(transactions);
+        console.log(transactionsData);
       } catch (error) {
-        console.error('Fetch error:', error);
+        console.error('Error fetching data:', error);
       }
     };
 
@@ -70,6 +82,14 @@ const TransactioncategoryScreen: React.FC = () => {
     }, 500);
   };
 
+  const renderItem = ({ item }: { item: Transaction }) => (
+    <View style={styles.transactionItem}>
+      <Text style={styles.transactionText}>{item.description}</Text>
+      <Text style={styles.transactionText}>{item.description}</Text>
+      <Text style={styles.transactionText}>{item.amount}</Text>
+      <Text style={styles.transactionText}>{item.category}</Text>
+    </View>
+  );
   return (
     <View style={styles.container}>
       <Text style={styles.header}>Transaction List</Text>
@@ -82,27 +102,8 @@ const TransactioncategoryScreen: React.FC = () => {
       <FlatList
         data={transactionsData}
         keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <TouchableOpacity onPress={() => toggleModal(item)}>
-            <View style={styles.transactionItem}>
-              <Text style={styles.transactionText}>{item.title}</Text>
-              <Text style={styles.transactionText}>{item.details}</Text>
-              <Text
-                style={[
-                  styles.transactionText,
-                  { color: item.amount >= 0 ? "green" : "red" },
-                ]}
-              >
-                {item.amount >= 0 ? "+" : "-"} £{Math.abs(item.amount)}
-              </Text>
-            </View>
-            <View style={styles.categoryRow}>
-              <Text style={styles.smallText}>{item.category}</Text>
-            </View>
-          </TouchableOpacity>
-        )}
+        renderItem={renderItem}
       />
-
       <Modal isVisible={isModalVisible}>
         <View style={styles.modalContainer}>
           <TouchableOpacity onPress={() => toggleModal(null)}>
@@ -141,7 +142,10 @@ const TransactioncategoryScreen: React.FC = () => {
       </Modal>
     </View>
   );
-}; const styles = StyleSheet.create({
+};
+
+
+const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 16,
