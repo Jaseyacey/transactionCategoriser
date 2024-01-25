@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -20,63 +20,34 @@ interface Transaction {
   date: string;
 }
 
-const transactionsData: Transaction[] = [
-  {
-    id: "1",
-    title: "Tesco",
-    amount: 20.0,
-    category: "Groceries",
-    date: "2023-01-01",
-    details: "card",
-  },
-  {
-    id: "2",
-    title: "Transaction 2",
-    amount: -10.0,
-    category: "category for Transaction 2",
-    date: "2023-01-01",
-    details: "asdasd",
-  },
-  {
-    id: "3",
-    title: "Transaction 2",
-    amount: -10.0,
-    category: "category for Transaction 2",
-    date: "2023-01-01",
-    details: "asdasd",
-  },
-  {
-    id: "4",
-    title: "Transaction 2",
-    amount: -10.0,
-    category: "category for Transaction 2",
-    date: "2023-01-01",
-    details: "asdasd",
-  },
-  {
-    id: "5",
-    title: "Transaction 2",
-    amount: -10.0,
-    category: "category for Transaction 2",
-    date: "2023-01-01",
-    details: "asdasd",
-  },
-  {
-    id: "6",
-    title: "Transaction 2",
-    amount: -10.0,
-    category: "category for Transaction 2",
-    date: "2023-01-01",
-    details: "asdasd",
-  },
-];
-
 const TransactioncategoryScreen: React.FC = () => {
   const [selectedTransaction, setSelectedTransaction] =
     useState<Transaction | null>(null);
   const [isModalVisible, setModalVisible] = useState(false);
   const [isRightCategory, setIsRightCategory] = useState(false);
   const [isWrongCategory, setIsWrongCategory] = useState(false);
+  const [transactionsData, setTransactionsData] = useState<Transaction[]>([]);
+  const [customerUid, setCustomerUid] = useState([''])
+
+  const ipaddress = ""
+  const url = `http://${ipaddress}:8080`;
+
+  const getCustomer = `${url}/customers/27aa6570-e343-4f17-bb17-5a7668936b8f/transactions`;
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await fetch(getCustomer);
+        const data = await response.json();
+        console.log(data)
+      } catch (error) {
+        console.error('Fetch error:', error);
+      }
+    };
+
+    fetchData();
+  }, []);
+
 
   const toggleModal = (transaction: Transaction | null) => {
     setSelectedTransaction(transaction);
@@ -98,8 +69,9 @@ const TransactioncategoryScreen: React.FC = () => {
       toggleModal(null);
     }, 500);
   };
+
   return (
-    <ScrollView style={styles.container}>
+    <View style={styles.container}>
       <Text style={styles.header}>Transaction List</Text>
       <View style={styles.headerRow}>
         <Text style={styles.headerText}>Merchant</Text>
@@ -131,7 +103,7 @@ const TransactioncategoryScreen: React.FC = () => {
         )}
       />
 
-<Modal isVisible={isModalVisible}>
+      <Modal isVisible={isModalVisible}>
         <View style={styles.modalContainer}>
           <TouchableOpacity onPress={() => toggleModal(null)}>
             <Text style={styles.modalCloseButton}>X</Text>
@@ -167,12 +139,9 @@ const TransactioncategoryScreen: React.FC = () => {
           </View>
         </View>
       </Modal>
-
-    </ScrollView>
+    </View>
   );
-};
-
-const styles = StyleSheet.create({
+}; const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 16,
@@ -290,6 +259,5 @@ const styles = StyleSheet.create({
     color: "#333",
   },
 });
-
 
 export default TransactioncategoryScreen;
