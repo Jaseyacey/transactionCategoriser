@@ -105,12 +105,13 @@ const TransactioncategoryScreen: React.FC = () => {
         >
           {item.amount >= 0 ? "+" : "-"} £{Math.abs(item.amount)}
         </Text>
-        <View style={styles.categoryRow}>
+        
+      </View>
+      <View style={styles.categoryRow}>
           <View style={styles.categoryBubble}>
             <Text style={styles.smallText}>{item.category}</Text>
           </View>
         </View>
-      </View>
     </TouchableOpacity>
   );
   return (
