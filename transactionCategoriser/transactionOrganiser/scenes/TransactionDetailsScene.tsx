@@ -103,6 +103,7 @@ const TransactioncategoryScreen: React.FC = () => {
       <Text style={styles.header}>Transaction List</Text>
       <View style={styles.headerRow}>
         <Text style={styles.headerText}>Merchant</Text>
+        <Text style={styles.headerText}>Date</Text>
         <Text style={styles.headerText}>Details</Text>
         <Text style={styles.headerText}>Amount</Text>
       </View>
@@ -110,46 +111,63 @@ const TransactioncategoryScreen: React.FC = () => {
         data={transactionsData}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
-          <>
-            <TouchableOpacity onPress={() => toggleModal(item)}>
-              <View style={styles.transactionItem}>
-                <Text>{item.title}</Text>
-                <Text>{item.details}</Text>
-                <Text>{'£' + item.amount}</Text>
-              </View>
-              <View style={styles.categoryRow}>
-                <Text style={styles.smallText}>{item.date}</Text>
-                <Text style={styles.smallText}>{item.category}</Text>
-                <Text />
-              </View>
-            </TouchableOpacity>
-            <View style={styles.line} />
-          </>
+          <TouchableOpacity onPress={() => toggleModal(item)}>
+            <View style={styles.transactionItem}>
+              <Text style={styles.transactionText}>{item.title}</Text>
+              <Text style={styles.transactionText}>{item.details}</Text>
+              <Text
+                style={[
+                  styles.transactionText,
+                  { color: item.amount >= 0 ? "green" : "red" },
+                ]}
+              >
+                {item.amount >= 0 ? "+" : "-"} £{Math.abs(item.amount)}
+              </Text>
+            </View>
+            <View style={styles.categoryRow}>
+              <Text style={styles.smallText}>{item.category}</Text>
+            </View>
+          </TouchableOpacity>
         )}
       />
 
-      <Modal isVisible={isModalVisible}>
+<Modal isVisible={isModalVisible}>
         <View style={styles.modalContainer}>
           <TouchableOpacity onPress={() => toggleModal(null)}>
             <Text style={styles.modalCloseButton}>X</Text>
           </TouchableOpacity>
-          <Text style={styles.modalHeader}>Transaction category</Text>
-          <Text style={styles.modalText}>{selectedTransaction?.category}</Text>
-          <Text style={styles.modalText}>Is this the right category?</Text>
-          <View style={styles.checkBoxes}>
-            <CheckBox
-              title="Yes"
-              checked={isRightCategory}
-              onPress={handleCheckboxToggle}
-            />
-            <CheckBox
-              title="No"
-              checked={isWrongCategory}
-              onPress={isWrongCategoryPressed}
-            />
+          <View style={styles.modalSection}>
+            <Text style={styles.modalHeader}>Transaction Category</Text>
+            <Text style={styles.modalText}>
+              {selectedTransaction?.category}
+            </Text>
+          </View>
+          <View style={styles.modalSection}>
+            <Text style={styles.modalHeader}>Is this the correct category?</Text>
+            <View style={styles.checkBoxes}>
+              <TouchableOpacity
+                style={[
+                  styles.checkBoxButton,
+                  isRightCategory && styles.checkBoxSelected,
+                ]}
+                onPress={handleCheckboxToggle}
+              >
+                <Text style={styles.checkBoxText}>Yes</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[
+                  styles.checkBoxButton,
+                  isWrongCategory && styles.checkBoxSelected,
+                ]}
+                onPress={isWrongCategoryPressed}
+              >
+                <Text style={styles.checkBoxText}>No</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
       </Modal>
+
     </ScrollView>
   );
 };
@@ -158,65 +176,120 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 16,
+    backgroundColor: "#F5F5F5",
   },
   header: {
     fontSize: 28,
     fontWeight: "bold",
-    marginBottom: 36,
-    justifyContent: "center",
+    marginBottom: 20,
     textAlign: "center",
-    color: "grey",
-  },
-  transactionItem: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 8,
-  },
-  modalContainer: {
-    backgroundColor: "#fff",
-    borderRadius: 10,
-    padding: 20,
-  },
-  modalCloseButton: {
-    fontSize: 20,
-    fontWeight: "bold",
-    color: "red",
-    alignSelf: "flex-end",
-  },
-  modalHeader: {
-    fontSize: 24,
-    fontWeight: "bold",
-    marginBottom: 10,
-  },
-  modalText: {
-    fontSize: 16,
-    marginBottom: 10,
-  },
-  checkBoxes: {
-    flexDirection: "row",
-  },
-  smallText: {
-    color: "grey",
-  },
-  line: {
-    height: 1,
-    width: "100%",
-  },
-  categoryRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
+    color: "#333",
   },
   headerRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     paddingVertical: 8,
     paddingHorizontal: 16,
-    backgroundColor: "#ECECEC", // Background color for the header row
+    backgroundColor: "#ECECEC",
+    marginBottom: 10,
+    borderRadius: 8,
   },
   headerText: {
     fontWeight: "bold",
     fontSize: 16,
+    color: "#333",
+  },
+  transactionItem: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 0,
+    backgroundColor: "#FFF",
+    padding: 10,
+    borderRadius: 8,
+    elevation: 3,
+    marginTop: 10,
+  },
+  transactionText: {
+    fontSize: 16,
+    color: "#333",
+  },
+  categoryRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    backgroundColor: "#ECECEC",
+    paddingVertical: 5,
+    paddingHorizontal: 10,
+    borderRadius: 8,
+    marginBottom: 10,
+  },
+  smallText: {
+    fontSize: 12,
+    color: "#666",
+  },
+  line: {
+    height: 1,
+    width: "100%",
+    backgroundColor: "#ECECEC",
+  },
+  modalContainer: {
+    backgroundColor: "#FFF",
+    borderRadius: 8,
+    padding: 16,
+    elevation: 3,
+    margin: 20,
+  },
+  modalSection: {
+    marginBottom: 20,
+  },
+
+  modalCloseButton: {
+    fontSize: 24,
+    fontWeight: "bold",
+    color: "red",
+    alignSelf: "flex-end",
+  },
+  checkBoxContainer: {
+    backgroundColor: "transparent",
+    borderWidth: 0,
+    marginLeft: 10,
+    marginRight: 10,
+  },
+  modalHeader: {
+    fontSize: 20,
+    fontWeight: "bold",
+    marginBottom: 10,
+    color: "#333",
+  },
+
+  modalText: {
+    fontSize: 16,
+    marginBottom: 10,
+    color: "#333",
+  },
+
+  checkBoxes: {
+    flexDirection: "row",
+    justifyContent: "center",
+  },
+
+  checkBoxButton: {
+    flex: 1,
+    backgroundColor: "#ECECEC",
+    borderRadius: 8,
+    paddingVertical: 10,
+    alignItems: "center",
+  },
+
+  checkBoxSelected: {
+    backgroundColor: "#007bff", // Background color when selected
+  },
+
+  checkBoxText: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#333",
   },
 });
+
 
 export default TransactioncategoryScreen;
