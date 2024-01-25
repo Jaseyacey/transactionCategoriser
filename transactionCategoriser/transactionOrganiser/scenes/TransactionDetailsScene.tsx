@@ -96,7 +96,7 @@ const TransactioncategoryScreen: React.FC = () => {
             numberOfLines={1}
             ellipsizeMode="tail"
           >
-            {item.description}
+            {item.description.replace(/\s+/g, ' ')}
           </Text>
         </View>
         <Text
@@ -291,7 +291,7 @@ const styles = StyleSheet.create({
   },
   descriptionContainer: {
     flex: 1,
-    maxWidth: "50%",
+    maxWidth: "75%",
   },
   categoryBubble: {
     backgroundColor: "#ECECEC",
