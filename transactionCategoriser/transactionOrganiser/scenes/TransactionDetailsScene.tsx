@@ -131,32 +131,43 @@ const TransactioncategoryScreen: React.FC = () => {
         )}
       />
 
-      <Modal isVisible={isModalVisible}>
+<Modal isVisible={isModalVisible}>
         <View style={styles.modalContainer}>
           <TouchableOpacity onPress={() => toggleModal(null)}>
             <Text style={styles.modalCloseButton}>X</Text>
           </TouchableOpacity>
-          <Text style={styles.modalHeader}>Transaction Category</Text>
-          <Text style={styles.modalText}>{selectedTransaction?.category}</Text>
-          <Text style={styles.modalText}>Is this the correct category?</Text>
-          <View style={styles.checkBoxes}>
-            <CheckBox
-              title="Yes"
-              checked={isRightCategory}
-              onPress={handleCheckboxToggle}
-              containerStyle={styles.checkBoxContainer}
-              textStyle={styles.checkBoxText}
-            />
-            <CheckBox
-              title="No"
-              checked={isWrongCategory}
-              onPress={isWrongCategoryPressed}
-              containerStyle={styles.checkBoxContainer}
-              textStyle={styles.checkBoxText}
-            />
+          <View style={styles.modalSection}>
+            <Text style={styles.modalHeader}>Transaction Category</Text>
+            <Text style={styles.modalText}>
+              {selectedTransaction?.category}
+            </Text>
+          </View>
+          <View style={styles.modalSection}>
+            <Text style={styles.modalHeader}>Is this the correct category?</Text>
+            <View style={styles.checkBoxes}>
+              <TouchableOpacity
+                style={[
+                  styles.checkBoxButton,
+                  isRightCategory && styles.checkBoxSelected,
+                ]}
+                onPress={handleCheckboxToggle}
+              >
+                <Text style={styles.checkBoxText}>Yes</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[
+                  styles.checkBoxButton,
+                  isWrongCategory && styles.checkBoxSelected,
+                ]}
+                onPress={isWrongCategoryPressed}
+              >
+                <Text style={styles.checkBoxText}>No</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
       </Modal>
+
     </ScrollView>
   );
 };
@@ -227,26 +238,15 @@ const styles = StyleSheet.create({
     elevation: 3,
     margin: 20,
   },
+  modalSection: {
+    marginBottom: 20,
+  },
+
   modalCloseButton: {
     fontSize: 24,
     fontWeight: "bold",
     color: "red",
     alignSelf: "flex-end",
-  },
-  modalHeader: {
-    fontSize: 20,
-    fontWeight: "bold",
-    marginBottom: 10,
-    color: "#333",
-  },
-  modalText: {
-    fontSize: 16,
-    marginBottom: 10,
-    color: "#333",
-  },
-  checkBoxes: {
-    flexDirection: "row",
-    justifyContent: "center",
   },
   checkBoxContainer: {
     backgroundColor: "transparent",
@@ -254,11 +254,42 @@ const styles = StyleSheet.create({
     marginLeft: 10,
     marginRight: 10,
   },
+  modalHeader: {
+    fontSize: 20,
+    fontWeight: "bold",
+    marginBottom: 10,
+    color: "#333",
+  },
+
+  modalText: {
+    fontSize: 16,
+    marginBottom: 10,
+    color: "#333",
+  },
+
+  checkBoxes: {
+    flexDirection: "row",
+    justifyContent: "center",
+  },
+
+  checkBoxButton: {
+    flex: 1,
+    backgroundColor: "#ECECEC",
+    borderRadius: 8,
+    paddingVertical: 10,
+    alignItems: "center",
+  },
+
+  checkBoxSelected: {
+    backgroundColor: "#007bff", // Background color when selected
+  },
+
   checkBoxText: {
     fontSize: 16,
-    fontWeight: "normal",
+    fontWeight: "bold",
     color: "#333",
   },
 });
+
 
 export default TransactioncategoryScreen;
