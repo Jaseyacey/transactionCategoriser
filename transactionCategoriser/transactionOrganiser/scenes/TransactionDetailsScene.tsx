@@ -13,7 +13,7 @@ import axios from "axios";
 interface Transaction {
   datetime: string;
   id: string;
-  description: string; // Changed "title" to "description" to match your data
+  description: string;
   amount: number;
   category: string;
 }
@@ -24,17 +24,20 @@ const TransactioncategoryScreen: React.FC = () => {
   const [isModalVisible, setModalVisible] = useState(false);
   const [isRightCategory, setIsRightCategory] = useState(false);
   const [isWrongCategory, setIsWrongCategory] = useState(false);
-  const [customerUid, setCustomerUid] = useState([''])
-  const [dateTime, setDateTime] = useState('')
+  const [customerUid, setCustomerUid] = useState([""]);
+  const [dateTime, setDateTime] = useState("");
 
-  const ipaddress = "192.168.1.242"
+  const ipaddress = "127.0.0.1";
   const url = `http://${ipaddress}:8080`;
-  const getCustomer = `${url}/customers/27aa6570-e343-4f17-bb17-5a7668936b8f/transactions`;
+  const getCustomer = (customerId: string) => `${url}/customers/${customerId}/transactions`;
 
+  const getCustomers = `${url}/customers`;
 
   const initialTransactionsData: Transaction[] = []; // Placeholder while fetching data
 
-  const [transactionsData, setTransactionsData] = useState<Transaction[]>(initialTransactionsData);
+  const [transactionsData, setTransactionsData] = useState<Transaction[]>(
+    initialTransactionsData
+  );
   const mapToTransaction = (apiData: any): Transaction => {
     return {
       datetime: apiData.datetime,
@@ -47,7 +50,8 @@ const TransactioncategoryScreen: React.FC = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await fetch(getCustomer);
+        const firstCustomerId = (await (await fetch(getCustomers)).json())[0]
+        const response = await fetch(getCustomer(firstCustomerId));
         const data = await response.json();
         const transactions = data.map((item: {}) => mapToTransaction(item));
         setTransactionsData(transactions);
@@ -59,7 +63,6 @@ const TransactioncategoryScreen: React.FC = () => {
 
     fetchData();
   }, []);
-
 
   const toggleModal = (transaction: Transaction | null) => {
     setSelectedTransaction(transaction);
@@ -83,20 +86,39 @@ const TransactioncategoryScreen: React.FC = () => {
   };
 
   const renderItem = ({ item }: { item: Transaction }) => (
-    <View style={styles.transactionItem}>
-      <Text style={styles.transactionText}>{item.description}</Text>
-      <Text style={styles.transactionText}>{item.description}</Text>
-      <Text style={styles.transactionText}>{item.amount}</Text>
-      <Text style={styles.transactionText}>{item.category}</Text>
-    </View>
+    <TouchableOpacity onPress={() => toggleModal(item)}>
+      <View style={styles.transactionItem}>
+        <View style={styles.descriptionContainer}>
+          <Text
+            style={styles.transactionText}
+            numberOfLines={1}
+            ellipsizeMode="tail"
+          >
+            {item.description}
+          </Text>
+        </View>
+        <Text
+          style={[
+            styles.transactionText,
+            { color: item.amount >= 0 ? "green" : "red" },
+          ]}
+        >
+          {item.amount >= 0 ? "+" : "-"} £{Math.abs(item.amount)}
+        </Text>
+        
+      </View>
+      <View style={styles.categoryRow}>
+          <View style={styles.categoryBubble}>
+            <Text style={styles.smallText}>{item.category}</Text>
+          </View>
+        </View>
+    </TouchableOpacity>
   );
   return (
     <View style={styles.container}>
       <Text style={styles.header}>Transaction List</Text>
       <View style={styles.headerRow}>
         <Text style={styles.headerText}>Merchant</Text>
-        <Text style={styles.headerText}>Date</Text>
-        <Text style={styles.headerText}>Details</Text>
         <Text style={styles.headerText}>Amount</Text>
       </View>
       <FlatList
@@ -116,7 +138,9 @@ const TransactioncategoryScreen: React.FC = () => {
             </Text>
           </View>
           <View style={styles.modalSection}>
-            <Text style={styles.modalHeader}>Is this the correct category?</Text>
+            <Text style={styles.modalHeader}>
+              Is this the correct category?
+            </Text>
             <View style={styles.checkBoxes}>
               <TouchableOpacity
                 style={[
@@ -143,7 +167,6 @@ const TransactioncategoryScreen: React.FC = () => {
     </View>
   );
 };
-
 
 const styles = StyleSheet.create({
   container: {
@@ -261,6 +284,15 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "bold",
     color: "#333",
+  },
+  descriptionContainer: {
+    flex: 1,
+    maxWidth: "50%",
+  },
+  categoryBubble: {
+    backgroundColor: "#ECECEC",
+    borderRadius: 8,
+    paddingHorizontal: 10,
   },
 });
 
