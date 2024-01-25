@@ -1,11 +1,11 @@
-import React, { useState, useEffect } from "react";
+import React, {useState, useEffect} from "react";
 import {
   View,
   Text,
   StyleSheet,
   TouchableOpacity,
   FlatList,
-  ScrollView,
+  ScrollView, Button,
 } from "react-native";
 import Modal from "react-native-modal";
 import axios from "axios";
@@ -26,6 +26,7 @@ const TransactioncategoryScreen: React.FC = () => {
   const [isWrongCategory, setIsWrongCategory] = useState(false);
   const [customerUid, setCustomerUid] = useState([""]);
   const [dateTime, setDateTime] = useState("");
+  const [firstCustomerId, setFirstCustomerId] = useState("");
 
   const ipaddress = "127.0.0.1";
   const url = `http://${ipaddress}:8080`;
@@ -47,20 +48,21 @@ const TransactioncategoryScreen: React.FC = () => {
       category: apiData.category.name, // Assuming "category" is an object with a "name" property
     };
   };
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const firstCustomerId = (await (await fetch(getCustomers)).json())[0]
-        const response = await fetch(getCustomer(firstCustomerId));
-        const data = await response.json();
-        const transactions = data.map((item: {}) => mapToTransaction(item));
-        setTransactionsData(transactions);
-        console.log(transactionsData);
-      } catch (error) {
-        console.error('Error fetching data:', error);
-      }
-    };
+  const fetchData = async () => {
+    try {
+      const firstCustomerId = (await (await fetch(getCustomers)).json())[0]
+      setFirstCustomerId(firstCustomerId);
+      const response = await fetch(getCustomer(firstCustomerId));
+      const data = await response.json();
+      const transactions = data.map((item: {}) => mapToTransaction(item));
+      setTransactionsData(transactions);
+      console.log(transactionsData);
+    } catch (error) {
+      console.error('Error fetching data:', error);
+    }
+  };
 
+  useEffect(() => {
     fetchData();
   }, []);
 
@@ -85,7 +87,7 @@ const TransactioncategoryScreen: React.FC = () => {
     }, 500);
   };
 
-  const renderItem = ({ item }: { item: Transaction }) => (
+  const renderItem = ({item}: { item: Transaction }) => (
     <TouchableOpacity onPress={() => toggleModal(item)}>
       <View style={styles.transactionItem}>
         <View style={styles.descriptionContainer}>
@@ -100,18 +102,18 @@ const TransactioncategoryScreen: React.FC = () => {
         <Text
           style={[
             styles.transactionText,
-            { color: item.amount >= 0 ? "green" : "red" },
+            {color: item.amount >= 0 ? "green" : "red"},
           ]}
         >
           {item.amount >= 0 ? "+" : "-"} £{Math.abs(item.amount)}
         </Text>
-        
+
       </View>
       <View style={styles.categoryRow}>
-          <View style={styles.categoryBubble}>
-            <Text style={styles.smallText}>{item.category}</Text>
-          </View>
+        <View style={styles.categoryBubble}>
+          <Text style={styles.smallText}>{item.category}</Text>
         </View>
+      </View>
     </TouchableOpacity>
   );
   return (
@@ -164,6 +166,8 @@ const TransactioncategoryScreen: React.FC = () => {
           </View>
         </View>
       </Modal>
+      <Button title={"new transaction"}
+              onPress={() => fetch(getCustomer(firstCustomerId), {method: "post"}).then(() => fetchData())}/>
     </View>
   );
 };
