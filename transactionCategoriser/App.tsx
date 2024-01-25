@@ -9,11 +9,12 @@ interface Transaction {
   title: string;
   amount: number;
   details: string;
+  category: {name: string, approved?: boolean}
 }
 
 const transactionsData: Transaction[] = [
-  { id: '1', title: 'Transaction 1', amount: 20.0, details: 'Details for Transaction 1' },
-  { id: '2', title: 'Transaction 2', amount: -10.0, details: 'Details for Transaction 2' },
+  { id: '1', title: 'Transaction 1', amount: 20.0, details: 'Details for Transaction 1', category: {name: 'Groceries'} },
+  { id: '2', title: 'Transaction 2', amount: -10.0, details: 'Details for Transaction 2', category: {name: 'Home Improvement'} },
 ];
 
 const TransactionsScreen: React.FC = () => {
@@ -63,9 +64,9 @@ const TransactionsScreen: React.FC = () => {
           <TouchableOpacity onPress={() => toggleModal(null)}>
             <Text style={styles.modalCloseButton}>X</Text>
           </TouchableOpacity>
-          <Text style={styles.modalHeader}>Transaction Details</Text>
-          <Text>{selectedTransaction?.details}</Text>
-          <Text>Is this the right category?</Text>
+          <Text style={styles.modalHeader}>{selectedTransaction?.details}</Text>
+          <Text style={styles.modalText}>{selectedTransaction?.category.name}</Text>
+          <Text style={styles.modalText}>Is this the right category?</Text>
           <View style={styles.checkBoxes}>
             <CheckBox
               title="Yes"
@@ -85,6 +86,42 @@ const TransactionsScreen: React.FC = () => {
 };
 
 const styles = StyleSheet.create({
+  modalContainer: {
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    padding: 20,
+  },
+  modalCloseButton: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: 'red',
+    alignSelf: 'flex-end',
+  },
+  modalHeader: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 10,
+  },
+  modalText: {
+    fontSize: 16,
+    marginBottom: 10,
+  },
+  checkBoxes: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  checkBox: {
+    flex: 1,
+    backgroundColor: 'transparent',
+    borderWidth: 0,
+    marginLeft: 0,
+    marginRight: 0,
+  },
+  checkBoxText: {
+    fontSize: 16,
+    fontWeight: 'normal',
+  },
   container: {
     flex: 1,
     padding: 16,
@@ -99,23 +136,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginBottom: 8,
   },
-  modalContainer: {
-    backgroundColor: 'white',
-    padding: 16,
-    borderRadius: 8,
-  },
-  modalHeader: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 8,
-  },
-  modalCloseButton: {
-    color: 'blue',
-    marginTop: 8,
-  },
-  checkBoxes: {
-    flexDirection: 'row'
-  }
 });
 
 export default TransactionsScreen;
