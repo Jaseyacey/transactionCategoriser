@@ -1,14 +1,15 @@
-import React, {useState, useEffect} from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
   StyleSheet,
   TouchableOpacity,
   FlatList,
-  ScrollView, Button,
+  Button,
+  TextInput,
+  Alert,
 } from "react-native";
 import Modal from "react-native-modal";
-import axios from "axios";
 
 interface Transaction {
   datetime: string;
@@ -22,19 +23,27 @@ const TransactioncategoryScreen: React.FC = () => {
   const [selectedTransaction, setSelectedTransaction] =
     useState<Transaction | null>(null);
   const [isModalVisible, setModalVisible] = useState(false);
+  const [isWrongCategoryModal, setIsWrongCategoryModal] = useState(false);
   const [isRightCategory, setIsRightCategory] = useState(false);
   const [isWrongCategory, setIsWrongCategory] = useState(false);
-  const [customerUid, setCustomerUid] = useState([""]);
-  const [dateTime, setDateTime] = useState("");
   const [firstCustomerId, setFirstCustomerId] = useState("");
-
-  const ipaddress = "127.0.0.1";
+  const [transactionId, setTransactionId] = useState("");
+  const [customerId, setCustomerId] = useState('')
+  const [suggestCategoriesResponse, setSuggestCategoriesResponse] = useState([])
+  const [userSuggestedCategory, setUserSuggestedCategory] = useState('')
+  const ipaddress = "192.168.1.242";
   const url = `http://${ipaddress}:8080`;
-  const getCustomer = (customerId: string) => `${url}/customers/${customerId}/transactions`;
+
+  const getCustomer = (firstCustomerId: string) => `${url}/customers/${firstCustomerId}/transactions`;
+
+  const suggestCategories = (firstCustomerId: string, userSuggestedCategory: string) =>
+    `${url}/customers/${firstCustomerId}/categories?proposedCategory=${userSuggestedCategory}`;
+  const updateSuggestedAi = (firstCustomerId: string, suggestCategoryToAi: string, transactionId: string) => `${url}/customers/${firstCustomerId}/transactions/${transactionId}/category`;
+  const getCategories = (firstCustomerId: string) => `${url}/customers/${firstCustomerId}/categories`;
 
   const getCustomers = `${url}/customers`;
 
-  const initialTransactionsData: Transaction[] = []; // Placeholder while fetching data
+  const initialTransactionsData: Transaction[] = [];
 
   const [transactionsData, setTransactionsData] = useState<Transaction[]>(
     initialTransactionsData
@@ -45,9 +54,10 @@ const TransactioncategoryScreen: React.FC = () => {
       id: apiData.id,
       description: apiData.description,
       amount: apiData.amount,
-      category: apiData.category.name, // Assuming "category" is an object with a "name" property
+      category: apiData.category.name,
     };
   };
+
   const fetchData = async () => {
     try {
       const firstCustomerId = (await (await fetch(getCustomers)).json())[0]
@@ -56,11 +66,16 @@ const TransactioncategoryScreen: React.FC = () => {
       const data = await response.json();
       const transactions = data.map((item: {}) => mapToTransaction(item));
       setTransactionsData(transactions);
-      console.log(transactionsData);
     } catch (error) {
       console.error('Error fetching data:', error);
     }
   };
+
+  const suggestCategory = async (firstCustomerId: string) => {
+
+  }
+
+
 
   useEffect(() => {
     fetchData();
@@ -73,6 +88,15 @@ const TransactioncategoryScreen: React.FC = () => {
     setIsWrongCategory(false);
   };
 
+  const toggleWrongCategory = (transaction: Transaction | null) => {
+
+    setSelectedTransaction(transaction);
+    setModalVisible(!isModalVisible);
+    setIsWrongCategoryModal(true);
+    setIsRightCategory(false);
+    setIsWrongCategory(false);
+  };
+
   const handleCheckboxToggle = () => {
     setIsRightCategory(true);
     setTimeout(() => {
@@ -80,14 +104,64 @@ const TransactioncategoryScreen: React.FC = () => {
     }, 500);
   };
 
-  const isWrongCategoryPressed = () => {
-    setIsWrongCategory(true);
-    setTimeout(() => {
-      toggleModal(null);
-    }, 500);
+
+  const suggestCategoryToAi = async (firstCustomerId: string, userSuggestedCategory: string) => {
+    const url = suggestCategories(firstCustomerId, userSuggestedCategory);
+    console.log('INPUT VALUE', url)
+    setUserSuggestedCategory(userSuggestedCategory)
+    try {
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+      const responseData = await response.json();
+      setSuggestCategoriesResponse(responseData)
+    } catch (error) {
+      console.log('error', error)
+    }
   };
 
-  const renderItem = ({item}: { item: Transaction }) => (
+  const updateCategoryForAi = async (firstCustomerId: string, aiSuggestionUpdate: string, transactionId: string) => {
+    console.log(aiSuggestionUpdate)
+    const url = updateSuggestedAi(firstCustomerId, aiSuggestionUpdate, transactionId);
+    setUserSuggestedCategory(userSuggestedCategory)
+    try {
+      const response = await fetch(url, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ category: aiSuggestionUpdate }),
+      }).finally(() => fetchData())
+      setIsWrongCategoryModal(false)
+      setSuggestCategoriesResponse([])
+    } catch (error) {
+      console.log('error', error)
+    }
+  }
+
+  const isWrongCategoryPressed = () => {
+    try {
+      const transactionId = selectedTransaction?.id ?? "";
+      setTransactionId(transactionId)
+      toggleWrongCategory(selectedTransaction);
+      // suggestCategoryToAi(firstCustomerId, userSuggestedCategory);
+    } catch (error) {
+      console.error('Error in isWrongCategoryPressed:', error);
+    }
+  };
+
+
+  const renderSuggestedCategoryItem = ({ item }: { item: string }) => (
+    <TouchableOpacity onPress={() => updateCategoryForAi(firstCustomerId, item, transactionId)}>
+      <Text>{item}</Text>
+    </TouchableOpacity>
+  );
+
+
+  const renderItem = ({ item }: { item: Transaction }) => (
     <TouchableOpacity onPress={() => toggleModal(item)}>
       <View style={styles.transactionItem}>
         <View style={styles.descriptionContainer}>
@@ -96,13 +170,13 @@ const TransactioncategoryScreen: React.FC = () => {
             numberOfLines={1}
             ellipsizeMode="tail"
           >
-            {item.description.replace(/\s+/g, ' ')}
+            {item.description}
           </Text>
         </View>
         <Text
           style={[
             styles.transactionText,
-            {color: item.amount >= 0 ? "green" : "red"},
+            { color: item.amount >= 0 ? "green" : "red" },
           ]}
         >
           {item.amount >= 0 ? "+" : "-"} £{Math.abs(item.amount)}
@@ -166,9 +240,36 @@ const TransactioncategoryScreen: React.FC = () => {
           </View>
         </View>
       </Modal>
+      <Modal isVisible={isWrongCategoryModal}>
+        <View style={styles.modalContainer}>
+          <TouchableOpacity onPress={() => setIsWrongCategoryModal(false)}>
+            <Text style={styles.modalCloseButton}>X</Text>
+          </TouchableOpacity>
+          <View style={styles.modalSection}>
+            <Text style={styles.modalHeader}>Wrong Category</Text>
+            <Text style={styles.modalText}>
+              Which category is it? {"\n"}So I can learn?
+            </Text>
+          </View>
+          <View>
+            <TextInput
+              placeholder="Suggest Category"
+              onChangeText={text => setUserSuggestedCategory(text)}
+            />
+            <Button
+              title={'✅'}
+              onPress={() => suggestCategoryToAi(firstCustomerId, userSuggestedCategory)} />
+          </View>
+          <FlatList
+            data={suggestCategoriesResponse}
+            keyExtractor={(item, index) => index.toString()}
+            renderItem={renderSuggestedCategoryItem}
+          />
+        </View>
+      </Modal >
       <Button title={"new transaction"}
-              onPress={() => fetch(getCustomer(firstCustomerId), {method: "post"}).then(() => fetchData())}/>
-    </View>
+        onPress={() => fetch(getCustomer(firstCustomerId), { method: "post" }).then(() => fetchData())} />
+    </View >
   );
 };
 
@@ -291,13 +392,19 @@ const styles = StyleSheet.create({
   },
   descriptionContainer: {
     flex: 1,
-    maxWidth: "75%",
+    maxWidth: "50%",
   },
   categoryBubble: {
     backgroundColor: "#ECECEC",
     borderRadius: 8,
     paddingHorizontal: 10,
   },
+  textInput: {
+    backgroundColor: "#ECECEC",
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingBottom: 40,
+  }
 });
 
 export default TransactioncategoryScreen;
