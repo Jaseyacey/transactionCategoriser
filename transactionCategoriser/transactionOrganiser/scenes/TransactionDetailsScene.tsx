@@ -7,6 +7,7 @@ import {
   FlatList,
   Button,
   TextInput,
+  Alert,
 } from "react-native";
 import Modal from "react-native-modal";
 
@@ -26,13 +27,18 @@ const TransactioncategoryScreen: React.FC = () => {
   const [isRightCategory, setIsRightCategory] = useState(false);
   const [isWrongCategory, setIsWrongCategory] = useState(false);
   const [firstCustomerId, setFirstCustomerId] = useState("");
-  const [categoryUpdate, setCategoryUpdate] = useState("");
   const [transactionId, setTransactionId] = useState("");
   const [customerId, setCustomerId] = useState('')
+  const [suggestCategoriesResponse, setSuggestCategoriesResponse] = useState([])
+  const [userSuggestedCategory, setUserSuggestedCategory] = useState('')
   const ipaddress = "192.168.1.242";
   const url = `http://${ipaddress}:8080`;
-  const getCustomer = (customerId: string) => `${url}/customers/${customerId}/transactions`;
-  const suggestCategories = (customerId: string) => `${url}/customers/${customerId}/transactions/${transactionId}/category`;
+
+  const getCustomer = (firstCustomerId: string) => `${url}/customers/${firstCustomerId}/transactions`;
+
+  const suggestCategories = (firstCustomerId: string, userSuggestedCategory: string) =>
+    `${url}/customers/${firstCustomerId}/categories?proposedCategory=${userSuggestedCategory}`;
+  const updateSuggestedAi = (firstCustomerId: string, suggestCategoryToAi: string, transactionId: string) => `${url}/customers/${firstCustomerId}/transactions/${transactionId}/category`;
   const getCategories = (firstCustomerId: string) => `${url}/customers/${firstCustomerId}/categories`;
 
   const getCustomers = `${url}/customers`;
@@ -48,9 +54,10 @@ const TransactioncategoryScreen: React.FC = () => {
       id: apiData.id,
       description: apiData.description,
       amount: apiData.amount,
-      category: apiData.category.name, // Assuming "category" is an object with a "name" property
+      category: apiData.category.name,
     };
   };
+
   const fetchData = async () => {
     try {
       const firstCustomerId = (await (await fetch(getCustomers)).json())[0]
@@ -59,20 +66,16 @@ const TransactioncategoryScreen: React.FC = () => {
       const data = await response.json();
       const transactions = data.map((item: {}) => mapToTransaction(item));
       setTransactionsData(transactions);
-      setTransactionId(transactions.id)
     } catch (error) {
       console.error('Error fetching data:', error);
     }
   };
 
   const suggestCategory = async (firstCustomerId: string) => {
-    try {
-      const response = await fetch(getCategories(firstCustomerId));
-      const responseData = await response.json();
-    } catch (error) {
-      console.error
-    }
-  };
+
+  }
+
+
 
   useEffect(() => {
     fetchData();
@@ -86,7 +89,7 @@ const TransactioncategoryScreen: React.FC = () => {
   };
 
   const toggleWrongCategory = (transaction: Transaction | null) => {
-    suggestCategory(firstCustomerId)
+
     setSelectedTransaction(transaction);
     setModalVisible(!isModalVisible);
     setIsWrongCategoryModal(true);
@@ -101,9 +104,62 @@ const TransactioncategoryScreen: React.FC = () => {
     }, 500);
   };
 
-  const isWrongCategoryPressed = () => {
-    toggleWrongCategory(selectedTransaction)
+
+  const suggestCategoryToAi = async (firstCustomerId: string, userSuggestedCategory: string) => {
+    const url = suggestCategories(firstCustomerId, userSuggestedCategory);
+    console.log('INPUT VALUE', url)
+    setUserSuggestedCategory(userSuggestedCategory)
+    try {
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+      const responseData = await response.json();
+      setSuggestCategoriesResponse(responseData)
+    } catch (error) {
+      console.log('error', error)
+    }
   };
+
+  const updateCategoryForAi = async (firstCustomerId: string, aiSuggestionUpdate: string, transactionId: string) => {
+    console.log(aiSuggestionUpdate)
+    const url = updateSuggestedAi(firstCustomerId, aiSuggestionUpdate, transactionId);
+    setUserSuggestedCategory(userSuggestedCategory)
+    try {
+      const response = await fetch(url, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ category: aiSuggestionUpdate }),
+      }).finally(() => fetchData())
+      setIsWrongCategoryModal(false)
+      setSuggestCategoriesResponse([])
+    } catch (error) {
+      console.log('error', error)
+    }
+  }
+
+  const isWrongCategoryPressed = () => {
+    try {
+      const transactionId = selectedTransaction?.id ?? "";
+      setTransactionId(transactionId)
+      toggleWrongCategory(selectedTransaction);
+      // suggestCategoryToAi(firstCustomerId, userSuggestedCategory);
+    } catch (error) {
+      console.error('Error in isWrongCategoryPressed:', error);
+    }
+  };
+
+
+  const renderSuggestedCategoryItem = ({ item }: { item: string }) => (
+    <TouchableOpacity onPress={() => updateCategoryForAi(firstCustomerId, item, transactionId)}>
+      <Text>{item}</Text>
+    </TouchableOpacity>
+  );
+
 
   const renderItem = ({ item }: { item: Transaction }) => (
     <TouchableOpacity onPress={() => toggleModal(item)}>
@@ -197,19 +253,23 @@ const TransactioncategoryScreen: React.FC = () => {
           </View>
           <View>
             <TextInput
-              style={styles.textInput}
-              value={categoryUpdate}
-              onChangeText={(value) => setCategoryUpdate(value)}
-              placeholder="Suggest a category"
+              placeholder="Suggest Category"
+              onChangeText={text => setUserSuggestedCategory(text)}
             />
-            <Button title={"Update Category"}
-              onPress={suggestCategory} />
+            <Button
+              title={'✅'}
+              onPress={() => suggestCategoryToAi(firstCustomerId, userSuggestedCategory)} />
           </View>
+          <FlatList
+            data={suggestCategoriesResponse}
+            keyExtractor={(item, index) => index.toString()}
+            renderItem={renderSuggestedCategoryItem}
+          />
         </View>
-      </Modal>
+      </Modal >
       <Button title={"new transaction"}
         onPress={() => fetch(getCustomer(firstCustomerId), { method: "post" }).then(() => fetchData())} />
-    </View>
+    </View >
   );
 };
 
